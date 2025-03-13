@@ -1,0 +1,53 @@
+# Xcode
+#
+# This .gitignore file should be placed at the root of your project directory.
+# It tells Git which files and directories to ignore when committing your project.
+# For more information, see https://git-scm.com/docs/gitignore
+
+# Build generated files
+build/
+DerivedData/
+
+# Xcode specific
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.xccheckout
+*.moved-aside
+*.xcuserstate
+
+# Xcode project workspace settings
+*.xcworkspace/xcuserdata/
+*.xcworkspace/xcshareddata/SwiftPM/
+*.xcworkspace/xcshareddata/IDEWorkspaceChecks.plist
+
+# Swift Package Manager
+.build/
+Package.resolved
+
+# CocoaPods (if used)
+Pods/
+
+# Carthage (if used)
+Carthage/Build/
+
+# fastlane (if used)
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+
+# Firebase
+# (Usually, you don't want to ignore GoogleService-Info.plist if it is needed for your app,
+# but if you have separate ones for different targets or personal configurations, adjust accordingly.)
+# GoogleService-Info.plist
+
+# Other temporary files
+*.swp
+*.tmp

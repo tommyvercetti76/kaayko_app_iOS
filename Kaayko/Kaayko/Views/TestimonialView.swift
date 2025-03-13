@@ -2,7 +2,7 @@
 //  TestimonialView.swift
 //  Kaayko
 //
-//  Created by Rohan Ramekar on [Date].
+//  Created by Rohan Ramekar on 3/12/25.
 //
 //  A SwiftUI view that displays a single testimonial with:
 //  - A circular avatar with the reviewer’s initial and a random background color.

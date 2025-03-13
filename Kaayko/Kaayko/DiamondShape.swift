@@ -2,6 +2,8 @@
 //  DiamondShape.swift
 //  Kaayko
 //
+//  Created by Rohan Ramekar on 3/12/25.
+//
 //  A SwiftUI Shape that draws a diamond, used for the like (vote) button.
 
 import SwiftUI

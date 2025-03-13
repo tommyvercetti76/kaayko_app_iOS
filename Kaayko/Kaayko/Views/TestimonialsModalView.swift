@@ -2,7 +2,7 @@
 //  TestimonialsModalView.swift
 //  Kaayko
 //
-//  Created by Rohan Ramekar on [Date].
+//  Created by Rohan Ramekar on 3/12/25.
 //
 //  A SwiftUI view that displays the Testimonials modal overlay.
 //  The modal appears as a full‑screen overlay with a dark background.

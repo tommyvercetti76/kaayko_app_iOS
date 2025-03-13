@@ -9,7 +9,6 @@
 //  Accessible and supports both light and dark mode.
 //
 
-
 import SwiftUI
 
 /// The available size configurations for the custom progress view.

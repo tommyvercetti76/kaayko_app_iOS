@@ -2,7 +2,7 @@
 //  Testimonial.swift
 //  Kaayko
 //
-//  Created by Rohan Ramekar on [Date].
+//  Created by Rohan Ramekar on 3/12/25.
 //
 //  A domain entity representing a testimonial.
 //  Includes fake data for testing and demonstration.

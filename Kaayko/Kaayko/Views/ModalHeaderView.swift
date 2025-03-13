@@ -2,7 +2,7 @@
 //  ModalHeaderView.swift
 //  Kaayko
 //
-//  Created by Rohan Ramekar on [Date].
+//  Created by Rohan Ramekar on 3/12/25.
 //
 //  A reusable SwiftUI view for modal headers.
 //  Displays a centered title and a close button at the top-right.

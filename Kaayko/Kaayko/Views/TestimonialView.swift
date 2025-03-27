@@ -4,10 +4,6 @@
 //
 //  Created by Rohan Ramekar on 3/12/25.
 //
-//  A SwiftUI view that displays a single testimonial with:
-//  - A circular avatar with the reviewer’s initial and a random background color.
-//  - The review text and the reviewer’s name.
-//  The view supports accessibility and adapts to dark/light mode.
 
 import SwiftUI
 
@@ -20,7 +16,7 @@ struct TestimonialView: View {
             // Avatar with randomized background color.
             Circle()
                 .fill(randomAvatarColor())
-                .frame(width: 40, height: 40)
+                .frame(width: 44, height: 44)
                 .overlay(
                     Text(String(testimonial.name.prefix(1)).uppercased())
                         .font(.system(size: 18, weight: .bold))
@@ -28,15 +24,15 @@ struct TestimonialView: View {
                 )
                 .accessibilityHidden(true)
             
-            // Testimonial content.
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text("\"\(testimonial.review)\"")
-                    .font(.system(size: 14))
-                    .foregroundColor(.black)
+                    .font(.system(size: 15, weight: .regular))
+                    .foregroundColor(.primary)        // Adaptive color
                     .multilineTextAlignment(.leading)
+                
                 Text(testimonial.name)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.gray)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.secondary)      // Lighter in dark mode
             }
             .accessibilityElement(children: .combine)
             
@@ -45,11 +41,6 @@ struct TestimonialView: View {
         .padding(.vertical, 8)
     }
     
-    /**
-     Returns a random color for the avatar background.
-     
-     - Returns: A `Color` chosen at random from a predefined list.
-     */
     func randomAvatarColor() -> Color {
         let colors: [Color] = [
             Color(hex: "#ff8c00"), // Professional orange

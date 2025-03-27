@@ -98,19 +98,23 @@
 		1CDB6E052D82480A00696C3D /* Exceptions for "Kaayko" folder in "Kaayko Clip" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				DiamondShape.swift,
+				KartItem.swift,
+				KartViewModel.swift,
 				Product.swift,
 				ProductRepository.swift,
 				ProductViewModel.swift,
-				Views/AboutModalView.swift,
+				Views/AboutSheetView.swift,
 				Views/AppHeaderView.swift,
+				Views/DiamondShape.swift,
+				Views/KartSheetView.swift,
+				Views/KartView.swift,
 				Views/ModalHeaderView.swift,
 				Views/ProductCardView.swift,
 				Views/ProductCategoryHeaderView.swift,
 				Views/ProductListView.swift,
 				Views/ProgressView.swift,
 				Views/Testimonial.swift,
-				Views/TestimonialsModalView.swift,
+				Views/TestimonialSheetView.swift,
 				Views/TestimonialView.swift,
 			);
 			target = 1CDB6DAB2D82417900696C3D /* Kaayko Clip */;

@@ -4,24 +4,26 @@
 //
 //  Created by Rohan Ramekar on 3/12/25.
 //
-//  A sticky header view that displays the brand name ("KAAYKO")
-//  and two circular buttons that trigger the presentation of separate modals:
-//  one for About and one for Testimonials. The buttons use custom icons that
-//  are larger, and the buttons themselves are displayed with only a circular border,
-//  without any filled background color. The view supports accessibility and dark/light mode.
+//  A sticky header view that displays:
+//   - The brand name ("KAAYKO")
+//   - Three circular buttons: About, Testimonials, and Cart
+//  Each button calls a closure passed in from above.
 
 import SwiftUI
 
-/// A header view for the app that displays the brand name and modal buttons.
 struct AppHeaderView: View {
-    /// Closure invoked when the About button is tapped.
+    /// Called when the About button is tapped.
     var onAbout: () -> Void
-    /// Closure invoked when the Testimonials button is tapped.
+    
+    /// Called when the Testimonials button is tapped.
     var onTestimonials: () -> Void
+    
+    /// Called when the Cart button is tapped.
+    var onCart: () -> Void
 
     var body: some View {
         HStack {
-            // Brand name, centered.
+            // Brand name.
             Text("KAAYKO")
                 .font(.system(size: 20, weight: .bold))
                 .foregroundColor(.primary)
@@ -29,42 +31,54 @@ struct AppHeaderView: View {
             
             Spacer()
             
-            // "About" Button.
-            Button(action: {
-                onAbout()
-            }) {
-                // Draw a circle outline without a fill.
+            // About button.
+            Button(action: { onAbout() }) {
                 Circle()
-                    .stroke(Color.primary, lineWidth: 1)
-                    .frame(width: 44, height: 44)
+                    .strokeBorder(Color.primary, lineWidth: 1)
+                    .frame(width: 32, height: 32)
                     .overlay(
-                        // Custom About icon scaled up for better visibility.
-                        Image("about")
+                        Image(systemName: "info.circle")
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 44, height: 44)
+                            .foregroundColor(.primary)
+                            .padding(4)
                     )
             }
             .accessibilityLabel("About")
             
             Spacer().frame(width: 8)
             
-            // "Testimonials" Button.
-            Button(action: {
-                onTestimonials()
-            }) {
+            // Testimonials button.
+            Button(action: { onTestimonials() }) {
                 Circle()
-                    .stroke(Color.primary, lineWidth: 1)
-                    .frame(width: 44, height: 44)
+                    .strokeBorder(Color.primary, lineWidth: 1)
+                    .frame(width: 32, height: 32)
                     .overlay(
-                        // Custom Testimonials icon scaled up.
-                        Image("testimonials")
+                        Image(systemName: "text.bubble")
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 44, height: 44)
+                            .foregroundColor(.primary)
+                            .padding(4)
                     )
             }
             .accessibilityLabel("Testimonials")
+            
+            Spacer().frame(width: 8)
+            
+            // Cart button.
+            Button(action: { onCart() }) {
+                Circle()
+                    .strokeBorder(Color.primary, lineWidth: 1)
+                    .frame(width: 32, height: 32)
+                    .overlay(
+                        Image(systemName: "bag")
+                            .resizable()
+                            .scaledToFit()
+                            .foregroundColor(.primary)
+                            .padding(4)
+                    )
+            }
+            .accessibilityLabel("Cart")
         }
         .padding(.horizontal, 16)
     }

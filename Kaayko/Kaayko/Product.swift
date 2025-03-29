@@ -34,3 +34,19 @@ struct Tag: Identifiable {
     let id = UUID()
     let name: String
 }
+
+extension Product {
+    /// Returns a copy of this product with the specified image array set as `imgSrc`.
+    func withImages(_ images: [String]) -> Product {
+        Product(
+            id: self.id,
+            title: self.title,
+            description: self.description,
+            price: self.price,
+            votes: self.votes,
+            productID: self.productID,
+            imgSrc: images,
+            tags: self.tags
+        )
+    }
+}

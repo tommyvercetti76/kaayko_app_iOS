@@ -5,31 +5,35 @@
 //  Created by Rohan Ramekar on 3/12/25.
 //
 //  A vertical scrolling list of product cards with a sticky header that contains:
-//    • The brand header (with "KAAYKO", About, Testimonials, and Cart buttons)
+//    • The brand header (with "KAAYKO", About, Testimonials, and Cart buttons + cart count badge)
 //    • A horizontally scrollable category header
 //  Also shows a progress indicator when loading.
-//  Now uses native iOS sheets (.sheet) with partial detents for both About & Testimonials.
+//  Uses native iOS sheets (.sheet) with partial detents for both About & Testimonials.
 
 import SwiftUI
 
 struct ProductListView: View {
-    // ViewModel providing product and tag data.
+    // MARK: - Properties
+    
+    /// ViewModel providing product and tag data (assumed real-time or cached).
     @ObservedObject var viewModel: ProductViewModel
     
-    // The KartViewModel providing cart data.
+    /// The KartViewModel providing cart data (for badge + adding items).
     @ObservedObject var kartViewModel: KartViewModel
     
-    // State controlling presentation of the About sheet.
+    /// State controlling presentation of the About sheet.
     @State private var showAboutSheet = false
     
-    // State controlling presentation of the Testimonials sheet.
+    /// State controlling presentation of the Testimonials sheet.
     @State private var showTestimonialsSheet = false
     
-    // State controlling presentation of the Cart modal (still using fullScreenCover).
+    /// State controlling presentation of the Cart modal (using .sheet).
     @State private var isKartModalPresented = false
     
-    // Use a local state or computed property to refresh any UI
+    /// Local property to store the cart item count (optional usage).
     @State private var cartItemCount: Int = 0
+    
+    // MARK: - Body
     
     var body: some View {
         ZStack {
@@ -43,7 +47,9 @@ struct ProductListView: View {
                         ForEach(viewModel.products) { product in
                             ProductCardView(
                                 product: product,
-                                viewModel: viewModel, kartViewModel: kartViewModel, onCartUpdate: handleCartUpdate
+                                viewModel: viewModel,
+                                kartViewModel: kartViewModel,
+                                onCartUpdate: handleCartUpdate
                             )
                             .frame(width: geometry.size.width - 32)
                         }
@@ -51,86 +57,78 @@ struct ProductListView: View {
                     .padding(.horizontal, 16)
                     .padding(.bottom, 24)
                 }
+                
+                // Sticky headers overlay
                 .overlay(
-                    VStack(spacing: 0) {
-                        
-                        // Sticky brand header
-                        AppHeaderView(
-                            onAbout: {
-                                withAnimation {
-                                    showAboutSheet = true
-                                }
-                            },
-                            onTestimonials: {
-                                withAnimation {
-                                    showTestimonialsSheet = true
-                                }
-                            },
-                            onCart: {
-                                withAnimation {
-                                    isKartModalPresented = true
-                                }
+                    AppHeaderView(
+                        onAbout: {
+                            withAnimation {
+                                showAboutSheet = true
                             }
-                        )
-                        .frame(height: 48)
-                        .background(Color(.systemBackground).opacity(0.95))
-                        
-                        // Sticky category header
-                        ProductCategoryHeaderView(
-                            tags: viewModel.tags,
-                            selectedTag: viewModel.selectedTag,
-                            viewModel: viewModel
-                        )
-                        .frame(height: 60)
-                        .background(Color(.systemBackground).opacity(0.95))
-                        .shadow(radius: 2)
-                    },
+                        },
+                        onTestimonials: {
+                            withAnimation {
+                                showTestimonialsSheet = true
+                            }
+                        },
+                        onCart: {
+                            withAnimation {
+                                isKartModalPresented = true
+                            }
+                        },
+                        cartCount: kartViewModel.totalItemCount,
+                        tags: viewModel.tags,
+                        selectedTag: viewModel.selectedTag,
+                        onTagSelected: { tag in
+                            Task {
+                                await viewModel.filterProducts(by: tag)
+                            }
+                        }
+                    ),
                     alignment: .top
                 )
             }
             
-            // If loading, show progress indicator
+            // Show a loading indicator if needed
             if viewModel.isLoading {
                 ProgressView(size: .regular)
             }
         }
-        // Load data once on appear
+        // Real-time or initial load call
         .onAppear {
-            Task {
-                await viewModel.loadInitialData()
-            }
+            // If using real-time approach:
+            viewModel.start()
+            
+            // If you prefer your old approach:
+            // Task { await viewModel.loadInitialData() }
         }
         
-        // Cart -> fullScreenCover
+        // Cart -> sheet
         .sheet(isPresented: $isKartModalPresented) {
             KartSheetView(kartViewModel: kartViewModel)
         }
-
         
-        // About -> new sheet with partial detents
+        // About -> partial-detent sheet
         .sheet(isPresented: $showAboutSheet) {
             AboutSheetView()
         }
         
-        // Testimonials -> new sheet with partial detents
+        // Testimonials -> partial-detent sheet
         .sheet(isPresented: $showTestimonialsSheet) {
             TestimonialsSheetView(testimonials: Testimonial.fakeTestimonials)
         }
     }
     
     // MARK: - Cart Update Handler
+    
+    /**
+     Called whenever a ProductCardView finishes a "DONE" add-to-cart action.
+     */
+    private func handleCartUpdate() {
+        // Re-check cart item count
+        cartItemCount = kartViewModel.totalItemCount
         
-        /**
-         Called whenever a ProductCardView finishes a "DONE" add-to-cart action.
-         */
-        private func handleCartUpdate() {
-            // Example: re-check cart item count
-            cartItemCount = kartViewModel.totalItemCount
-            
-            // You can also trigger any UI changes here, like
-            // updating a badge or calling an analytics event.
-            print("Cart updated! New total: \(cartItemCount)")
-        }
+        // Could also trigger UI changes, analytics, etc.
+        print("Cart updated! New total: \(cartItemCount)")
+    }
 }
-
-

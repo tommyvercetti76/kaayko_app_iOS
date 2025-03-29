@@ -10,15 +10,14 @@
 import SwiftUI
 
 struct ContentView: View {
-    // Instantiate the ProductViewModel.
-    @StateObject private var viewModel = ProductViewModel()
-
+    @StateObject private var productViewModel = ProductViewModel()
+    @StateObject private var kartViewModel = KartViewModel()
+    
     var body: some View {
-        // Display the ProductListView, which already includes the sticky header overlay.
-        ProductListView(viewModel: viewModel)
+        ProductListView(viewModel: productViewModel, kartViewModel: kartViewModel)
             .onAppear {
                 Task {
-                    await viewModel.loadInitialData()
+                    await productViewModel.loadInitialData()
                 }
             }
     }

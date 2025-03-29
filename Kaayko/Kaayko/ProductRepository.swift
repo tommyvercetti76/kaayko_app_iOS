@@ -6,7 +6,7 @@
 //
 //  A repository that fetches product data from Firebase Firestore, merges it with Storage image URLs,
 //  and handles vote updates. Implements the ProductRepositoryProtocol.
-
+//
 
 import FirebaseCore
 import FirebaseFirestore
@@ -36,8 +36,15 @@ final class ProductRepository: ProductRepositoryProtocol {
     private let storage = Storage.storage()
     
     /**
+     An in-memory cache for image URLs, keyed by productID.
+     This prevents re-fetching from Firebase Storage if we've already downloaded a product's images.
+     */
+    private var imagesCache = [String: [String]]()
+    
+    /**
      Fetches all products from the "kaaykoproducts" collection,
      merging each with its associated image URLs from Firebase Storage.
+     
      - Returns: An array of `Product` entities.
      */
     func fetchAllProducts() async throws -> [Product] {
@@ -65,7 +72,7 @@ final class ProductRepository: ProductRepositoryProtocol {
             )
         }
         
-        // For each product, fetch its images.
+        // For each product, fetch its images (using the cache).
         var finalProducts: [Product] = []
         for rawProd in rawProducts {
             let images = try await fetchImagesByProductId(rawProd.productID)
@@ -86,11 +93,17 @@ final class ProductRepository: ProductRepositoryProtocol {
     }
     
     /**
-     Fetches image URLs for a given productID from Firebase Storage.
+     Fetches image URLs for a given productID from Firebase Storage, using an in-memory cache to avoid repeated downloads.
+     
      - Parameter productID: The product's folder ID in Storage.
      - Returns: An array of download URL strings.
      */
     private func fetchImagesByProductId(_ productID: String) async throws -> [String] {
+        // If we've already fetched these images, return them immediately.
+        if let cachedImages = imagesCache[productID] {
+            return cachedImages
+        }
+        
         let storageRef = storage.reference(withPath: "kaaykoStoreTShirtImages/\(productID)")
         let listResult = try await storageRef.listAll()
         
@@ -114,6 +127,9 @@ final class ProductRepository: ProductRepositoryProtocol {
             }
             return temp
         }
+        
+        // Cache the results for future use.
+        imagesCache[productID] = urls
         return urls
     }
     

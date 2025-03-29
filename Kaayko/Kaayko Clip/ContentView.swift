@@ -8,17 +8,15 @@
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject private var productViewModel = ProductViewModel()
+    @StateObject private var kartViewModel = KartViewModel()
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
+        ProductListView(viewModel: productViewModel, kartViewModel: kartViewModel)
+            .onAppear {
+                Task {
+                    await productViewModel.loadInitialData()
+                }
+            }
     }
-}
-
-#Preview {
-    ContentView()
 }

@@ -4,84 +4,51 @@
 //
 //  Created by Rohan Ramekar on 3/12/25.
 //
-/// A SwiftUI view that displays a single product card. It includes:
-///  - A swipeable image carousel using TabView (with custom dot indicators).
-///  - Page indicators shown under the carousel but above the product title.
-///  - Title (bold, black) and description (regular, black).
-///  - A footer with three columns:
-///       1) Price (centered),
-///       2) A diamond "like" button with vote count underneath,
-///       3) A "Buy" button that, when tapped, reveals a custom buy panel below the footer.
-///  - The buy panel has:
-///       - A color selection row (circles for available colors),
-///       - A size selection row (S, M, L),
-///       - A custom circular stepper (+/-) for quantity (up to 3),
-///       - A "DONE" button that adds items to the cart (quantity times) via `kartViewModel`
-///         and calls `onCartUpdate()`.
-///
-///  When the "DONE" button is tapped, the panel closes, quantity resets to 1, and
-///  the cart header is updated via `onCartUpdate()`.
-///
-///  All UI elements preserve the original background colors (white). Dark/light mode is unchanged
-///  (black text, white backgrounds).
+//  A SwiftUI view that displays:
+//   1) An image carousel + custom indicators
+//   2) Title & description
+//   3) A footer with price, votes, and a purely symbolic "cart" icon button
+//      - The icon is black when the buy panel is closed, and gold when open.
+//      - There is no background around the icon, so it appears as a standalone symbol
+//        that changes color. A glow is optionally added when gold.
+//   4) A buy panel that slides up from the bottom if `showBuyPanel == true`.
+//      - Its sub-elements appear in ascending order, disappear in reverse.
+//
 
 import SwiftUI
 
 struct ProductCardView: View {
-    // MARK: - Properties
     
-    /// The product to display.
+    // MARK: - External Dependencies
     let product: Product
-    
-    /// The ViewModel for handling vote updates.
     @ObservedObject var viewModel: ProductViewModel
-    
-    /// The KartViewModel for adding items to the cart.
     @ObservedObject var kartViewModel: KartViewModel
     
-    /**
-     A closure called whenever the cart is updated (e.g., after user taps "DONE" in the buy panel).
-     This allows the parent view to refresh the header or do other updates.
-     */
+    /// Called whenever the cart updates (e.g., after tapping "DONE").
     var onCartUpdate: () -> Void
     
-    /// Tracks the currently visible image index in the carousel.
-    @State private var currentIndex: Int = 0
+    // MARK: - States
     
-    /// Tracks whether the product is liked.
-    @State private var isLiked: Bool = false
-    
-    /// Local state for the current vote count.
-    @State private var currentVotes: Int
-    
-    // MARK: - Buy Panel States
-    
-    /// Whether to show the buy panel below the footer.
+    /// Whether the buy panel is visible
     @State private var showBuyPanel: Bool = false
     
-    /// The quantity chosen in the buy panel's stepper (1...3).
+    /// Whether the buy panel should begin its reverse subview animation to close
+    @State private var buyPanelShouldClose: Bool = false
+    
+    /// The current carousel index
+    @State private var currentIndex: Int = 0
+    
+    /// Like/vote state
+    @State private var isLiked: Bool = false
+    @State private var currentVotes: Int
+    
+    /// User’s color/size/quantity selections
+    @State private var selectedColor: String?
+    @State private var selectedSize: String?
     @State private var buyQuantity: Int = 1
-    
-    /// The currently selected color name. (If nil, user hasn't selected yet.)
-    @State private var selectedColor: String? = nil
-    
-    /// The currently selected size. (If nil, user hasn't selected yet.)
-    @State private var selectedSize: String? = nil
-    
-    // Preset arrays for color & size selection:
-    private let availableColors = ["Red", "Blue", "Green"]
-    private let availableSizes = ["S", "M", "L"]
     
     // MARK: - Initializer
     
-    /**
-     Initializes the card view with a product, product ViewModel, and a cart ViewModel.
-     - Parameters:
-       - product: The `Product` entity to be displayed.
-       - viewModel: The `ProductViewModel` used for vote updates.
-       - kartViewModel: The `KartViewModel` used for adding to cart.
-       - onCartUpdate: A closure called when the cart changes (e.g., to update the header).
-     */
     init(
         product: Product,
         viewModel: ProductViewModel,
@@ -93,7 +60,6 @@ struct ProductCardView: View {
         self.kartViewModel = kartViewModel
         self.onCartUpdate = onCartUpdate
         
-        // Initialize currentVotes with the product's votes
         _currentVotes = State(initialValue: product.votes)
     }
     
@@ -101,13 +67,14 @@ struct ProductCardView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // 1) Image carousel
+            
+            // 1) Carousel
             imageCarousel
             
-            // 2) Page indicators
+            // 2) Dot Indicators
             carouselIndicators
             
-            // 3) Title & description
+            // 3) Title & Description
             VStack(spacing: 4) {
                 Text(product.title)
                     .font(.system(size: 20, weight: .bold))
@@ -121,30 +88,49 @@ struct ProductCardView: View {
             }
             .padding(.vertical, 12)
             
-            // 4) Footer (Price, Diamond+Votes, Buy)
+            // 4) Footer with Price, Votes, Cart Icon
             footer
             
-            // 5) If buy panel is shown, reveal it below the footer
+            // 5) If the buy panel is showing, present it with a .move from bottom
             if showBuyPanel {
-                buyPanel
-                    .transition(.move(edge: .bottom))
+                BuyPanelView(
+                    product: product,
+                    kartViewModel: kartViewModel,
+                    onCartUpdate: handleDoneInBuyPanel,
+                    
+                    // Re-tapped cart → close in reverse
+                    shouldClose: $buyPanelShouldClose,
+                    onClosed: {
+                        // Once reversed animations are done, remove panel
+                        withAnimation {
+                            showBuyPanel = false
+                        }
+                        buyPanelShouldClose = false
+                    },
+                    
+                    // Selections
+                    selectedColor: $selectedColor,
+                    selectedSize:  $selectedSize,
+                    quantity:      $buyQuantity
+                )
+                .transition(.move(edge: .bottom))
             }
         }
         .padding()
-        .background(Color.white) // White card background
+        .background(Color.white)
         .cornerRadius(12)
         .shadow(color: Color.black.opacity(0.1), radius: 6, x: 0, y: 2)
-        .animation(.easeInOut, value: showBuyPanel)
-        .accessibilityElement(children: .combine)
+        // Overall open/close for the entire panel
+        .animation(.easeInOut(duration: 0.25), value: showBuyPanel)
+        .onAppear {
+            autoSelectIfSingleOption()
+        }
     }
 }
 
-// MARK: - Subviews & Private Helpers
+// MARK: - Subviews
 extension ProductCardView {
     
-    /**
-     A swipeable carousel of product images using a TabView with .page style (no built-in indicators).
-     */
     private var imageCarousel: some View {
         TabView(selection: $currentIndex) {
             ForEach(product.imgSrc.indices, id: \.self) { idx in
@@ -168,7 +154,6 @@ extension ProductCardView {
                     }
                     .tag(idx)
                 } else {
-                    // Fallback if the URL is invalid
                     Color.gray.frame(height: 240).tag(idx)
                 }
             }
@@ -177,9 +162,6 @@ extension ProductCardView {
         .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
     }
     
-    /**
-     Custom dot indicators displayed below the carousel.
-     */
     private var carouselIndicators: some View {
         HStack(spacing: 6) {
             ForEach(product.imgSrc.indices, id: \.self) { idx in
@@ -192,14 +174,11 @@ extension ProductCardView {
     }
     
     /**
-     The footer with:
-       - Price,
-       - Diamond + votes,
-       - Buy button to open the buy panel.
-     */
+     Footer with price, diamond votes, and a "cart" button that has **no background**,
+     changing from black to gold.
+    */
     private var footer: some View {
         HStack(spacing: 0) {
-            
             // Price
             VStack {
                 Text(product.price)
@@ -208,16 +187,16 @@ extension ProductCardView {
             }
             .frame(maxWidth: .infinity)
             
-            // Diamond + Votes
+            // Diamond + votes
             VStack(spacing: 4) {
-                Button(action: {
+                Button {
                     Task {
                         isLiked.toggle()
                         let voteChange = isLiked ? 1 : -1
                         await viewModel.updateVotes(for: product, voteChange: voteChange)
                         currentVotes += voteChange
                     }
-                }) {
+                } label: {
                     DiamondShape()
                         .fill(isLiked ? Color.red : Color.gray.opacity(0.5))
                         .frame(width: 28, height: 28)
@@ -230,331 +209,58 @@ extension ProductCardView {
             }
             .frame(maxWidth: .infinity)
             
-            // Buy button
+            // CART Button: just the icon, no background, color toggles black <-> gold
             VStack {
-                Button(action: {
-                    withAnimation {
-                        showBuyPanel.toggle()
-                    }
-                }) {
-                    Image(systemName: "cart.badge.plus")
+                Button(action: onBuyButtonTapped) {
+                    Image(systemName: "cart.fill")
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 20, height: 20)
-                        .foregroundColor(.white)
-                        .padding(12)
+                        .frame(width: 28, height: 28)
+                        // The icon color is black if panel is closed, gold if open
+                        .foregroundColor(showBuyPanel ? .yellow : .black)
+                        // If you'd like an extra glow around gold:
+                        .shadow(
+                            color: showBuyPanel ? Color.yellow.opacity(0.8) : .clear,
+                            radius: showBuyPanel ? 12 : 0
+                        )
+                        // Animate color & glow changes
+                        .animation(.easeInOut(duration: 0.3), value: showBuyPanel)
                 }
-                .frame(width: 44, height: 44)
-                .background(Color.blue)
-                .cornerRadius(8)
-                .accessibilityLabel("Buy this product")
+                .frame(width: 44, height: 44) // a tap target
+                .accessibilityLabel(showBuyPanel ? "Close the Buy Panel" : "Buy this product")
             }
             .frame(maxWidth: .infinity)
-            
         }
         .padding(.vertical, 12)
         .background(Color.white)
-        .accessibilityElement(children: .combine)
     }
-    
-    /**
-     A revised buy panel that appears below the footer, arranged in a grid-like layout:
-       - Left column has labels: "Color," "Size," "Quantity"
-       - Right column has the corresponding UI elements (color circles, size buttons, stepper).
-       - The "DONE" button appears at the bottom, spanning full width.
-       - Stepper has symmetrical +/- buttons, and quantity is limited to [1..3].
-       - "DONE" is disabled until user selects both color and size.
-    */
-    private var buyPanel: some View {
-        VStack(spacing: 16) {
-            
-            // 1) COLOR row (Left=Label, Right=Color Circles)
-            HStack {
-                // Left label
-                Text("Color")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.black)
-                    .frame(width: 70, alignment: .leading)  // adjust width to your liking
-                
-                Spacer()
-                
-                // Right side: color circles
-                HStack(spacing: 12) {
-                    ForEach(availableColors, id: \.self) { colorName in
-                        Button {
-                            selectedColor = colorName
-                        } label: {
-                            Circle()
-                                .fill(colorFromName(colorName))
-                                .frame(width: 24, height: 24)
-                                .overlay(
-                                    Circle()
-                                        .stroke(Color.black, lineWidth: selectedColor == colorName ? 2 : 0)
-                                )
-                        }
-                    }
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 16)
-            
-            // 2) SIZE row (Left=Label, Right=Size Buttons)
-            HStack {
-                // Left label
-                Text("Size")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.black)
-                    .frame(width: 70, alignment: .leading)
-                
-                Spacer()
-                
-                // Right side: size buttons
-                HStack(spacing: 12) {
-                    ForEach(availableSizes, id: \.self) { size in
-                        Button {
-                            selectedSize = size
-                        } label: {
-                            Text(size)
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(.white)
-                                .padding(.vertical, 6)
-                                .padding(.horizontal, 12)
-                                .background(selectedSize == size ? Color.blue : Color.gray)
-                                .cornerRadius(8)
-                        }
-                    }
-                }
-            }
-            .padding(.horizontal, 16)
-            
-            // 3) QUANTITY row (Left=Label, Right=Stepper)
-            HStack {
-                // Left label
-                Text("Quantity")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.black)
-                    .frame(width: 70, alignment: .leading)
-                
-                Spacer()
-                
-                // Right side: symmetrical stepper
-                HStack(spacing: 12) {
-                    
-                    // Minus button (same size as plus)
-                    Button(action: {
-                        if buyQuantity > 1 {
-                            buyQuantity -= 1
-                        }
-                    }) {
-                        Image(systemName: "minus")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.white)
-                            // Matching width/height for symmetrical shape
-                            .frame(width: 32, height: 32)
-                            .background(buyQuantity > 1 ? Color.blue : Color.gray.opacity(0.5))
-                            .clipShape(Circle())
-                    }
-                    .disabled(buyQuantity <= 1)
-                    
-                    // Quantity label
-                    Text("\(buyQuantity)")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundColor(.black)
-                    
-                    // Plus button (same size as minus)
-                    Button(action: {
-                        if buyQuantity < 3 {
-                            buyQuantity += 1
-                        }
-                    }) {
-                        Image(systemName: "plus")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.white)
-                            // Matching width/height for symmetrical shape
-                            .frame(width: 32, height: 32)
-                            .background(buyQuantity < 3 ? Color.blue : Color.gray.opacity(0.5))
-                            .clipShape(Circle())
-                    }
-                    .disabled(buyQuantity >= 3)
-                }
-            }
-            .padding(.horizontal, 16)
-            
-            // 4) DONE button (full width)
-            Button("DONE") {
-                print("DEBUG: DONE tapped -> color=\(selectedColor ?? "nil"), size=\(selectedSize ?? "nil"), quantity=\(buyQuantity)")
-                
-                // Add items to cart
-                for _ in 0..<buyQuantity {
-                    kartViewModel.addToCart(product: product)
-                }
-                
-                // Notify parent (refresh cart header, etc.)
-                onCartUpdate()
-                
-                // Close panel & reset
-                withAnimation {
-                    showBuyPanel = false
-                    buyQuantity = 1
-                    selectedColor = nil
-                    selectedSize = nil
-                }
-            }
-            .font(.system(size: 16, weight: .bold))
-            .padding(.vertical, 8)
-            .frame(maxWidth: .infinity)
-            .background(Color.green.cornerRadius(8))
-            .foregroundColor(.white)
-            .padding(.horizontal, 16)
-            .padding(.bottom, 12)
-            .disabled(selectedColor == nil || selectedSize == nil)
-            
-        }
-        .background(Color.white)
-    }
-    
-    /**
-     A horizontal row of color circles (Red, Blue, Green).
-     Tapping sets `selectedColor`.
-     */
-    private var colorSelectionRow: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Choose a Color:")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(.black)
-            
-            HStack(spacing: 12) {
-                ForEach(availableColors, id: \.self) { colorName in
-                    // A circle representing this color
-                    Button(action: {
-                        selectedColor = colorName
-                    }) {
-                        Circle()
-                            .fill(colorFromName(colorName))
-                            .frame(width: 24, height: 24)
-                            .overlay(
-                                Circle()
-                                    .stroke(Color.black, lineWidth: selectedColor == colorName ? 2 : 0)
-                            )
-                    }
-                }
-            }
-        }
-        .padding(.top, 12)
-        .padding(.horizontal, 16)
-    }
-    
-    /**
-     A horizontal row for size selection (S, M, L).
-     */
-    private var sizeSelectionRow: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Choose a Size:")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(.black)
-            
-            HStack(spacing: 12) {
-                ForEach(availableSizes, id: \.self) { size in
-                    Button(action: {
-                        selectedSize = size
-                    }) {
-                        Text(size)
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.white)
-                            .padding(.vertical, 6)
-                            .padding(.horizontal, 12)
-                            .background(
-                                selectedSize == size ? Color.blue : Color.gray
-                            )
-                            .cornerRadius(8)
-                    }
-                }
-            }
-        }
-        .padding(.horizontal, 16)
-    }
-    
-    /// A row that lets the user select a quantity from 1 to 3.
-    private var stepperRow: some View {
-        HStack(spacing: 16) {
-            // Minus
-            Button(action: {
-                if buyQuantity > 1 {
-                    buyQuantity -= 1
-                }
-            }) {
-                Image(systemName: "minus")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.white)
-                    .padding(12)
-                    .background(buyQuantity > 1 ? Color.blue : Color.gray.opacity(0.5))
-                    .clipShape(Circle())
-            }
-            .disabled(buyQuantity <= 1)
-            
-            // Quantity label
-            Text("\(buyQuantity)")
-                .font(.system(size: 18, weight: .medium))
-                .foregroundColor(.black)
-            
-            // Plus
-            Button(action: {
-                if buyQuantity < 3 {
-                    buyQuantity += 1
-                }
-            }) {
-                Image(systemName: "plus")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.white)
-                    .padding(12)
-                    .background(buyQuantity < 3 ? Color.blue : Color.gray.opacity(0.5))
-                    .clipShape(Circle())
-            }
-            .disabled(buyQuantity >= 3)
-        }
-    }
+}
 
-    /// A button that adds items to the cart and closes the panel.
-    // Disabled unless both color & size are selected.
-    private var doneButton: some View {
-        Button("DONE") {
-            print("DEBUG: DONE tapped. Adding \(buyQuantity) items to cart. color=\(selectedColor ?? "nil"), size=\(selectedSize ?? "nil")")
-            
-            // Add items to cart
-            for _ in 0..<buyQuantity {
-                kartViewModel.addToCart(product: product)
-            }
-            
-            // Notify parent so it can refresh the cart badge
-            onCartUpdate()
-            
-            // Close panel & reset
+// MARK: - Private Helpers
+extension ProductCardView {
+    
+    private func onBuyButtonTapped() {
+        if !showBuyPanel {
+            // Open
             withAnimation {
-                showBuyPanel = false
-                buyQuantity = 1
-                selectedColor = nil
-                selectedSize = nil
+                showBuyPanel = true
             }
+        } else {
+            // Already open -> request reverse subview animations
+            buyPanelShouldClose = true
         }
-        .font(.system(size: 16, weight: .bold))
-        .padding(.vertical, 8)
-        .frame(maxWidth: .infinity)
-        .background(Color.green.cornerRadius(8))
-        .foregroundColor(.white)
-        .padding(.horizontal, 16)
-        .disabled(selectedColor == nil || selectedSize == nil)
     }
     
-    /**
-     Helper to return a SwiftUI Color from a simple color name.
-     Expand as needed for more colors.
-     */
-    private func colorFromName(_ name: String) -> Color {
-        switch name {
-        case "Red":   return .red
-        case "Blue":  return .blue
-        case "Green": return .green
-        default:      return .gray
+    private func handleDoneInBuyPanel() {
+        onCartUpdate()
+    }
+    
+    private func autoSelectIfSingleOption() {
+        if product.availableColors.count == 1, selectedColor == nil {
+            selectedColor = product.availableColors.first
+        }
+        if product.availableSizes.count == 1, selectedSize == nil {
+            selectedSize = product.availableSizes.first
         }
     }
 }

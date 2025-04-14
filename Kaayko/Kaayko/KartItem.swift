@@ -9,21 +9,18 @@
 
 import Foundation
 
-/// Represents a single item in the user's cart.
 struct KartItem: Identifiable {
-    /// The unique identifier of this cart item. Typically the product ID or a composite.
     let id: String
-    
-    /// The actual product being purchased.
     let product: Product
-    
-    /// The current quantity of this item.
     var quantity: Int
+    let selectedColor: String?
+    let selectedSize: String?
     
-    /// Initializer ensuring no forced unwrapping.
-    init(product: Product, quantity: Int = 1) {
+    init(product: Product, quantity: Int = 1, selectedColor: String? = nil, selectedSize: String? = nil) {
         self.id = product.id
         self.product = product
-        self.quantity = max(quantity, 1) // Ensure quantity is at least 1
+        self.quantity = max(quantity, 1)
+        self.selectedColor = selectedColor
+        self.selectedSize = selectedSize
     }
 }

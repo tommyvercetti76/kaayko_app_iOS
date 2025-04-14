@@ -105,6 +105,7 @@
 				RealTimeProductRepository.swift,
 				Views/AboutSheetView.swift,
 				Views/AppHeaderView.swift,
+				Views/BuyPanelView.swift,
 				Views/DiamondShape.swift,
 				Views/KartSheetView.swift,
 				Views/KartView.swift,

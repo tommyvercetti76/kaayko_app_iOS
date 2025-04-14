@@ -27,6 +27,15 @@ struct Product: Identifiable {
     let imgSrc: [String]
     /// An array of tags (categories) associated with the product.
     let tags: [String]
+    
+    /// array of available colors
+    let availableColors: [String]
+    
+    /// array of available sizes
+    let availableSizes: [String]
+    
+    // array of maximum quantity
+    let maxQuantity: Int
 }
 
 /// A simple domain entity for product tags (if needed).
@@ -46,7 +55,10 @@ extension Product {
             votes: self.votes,
             productID: self.productID,
             imgSrc: images,
-            tags: self.tags
+            tags: self.tags,
+            availableColors: self.availableColors,
+            availableSizes: self.availableSizes,
+            maxQuantity: self.maxQuantity
         )
     }
 }

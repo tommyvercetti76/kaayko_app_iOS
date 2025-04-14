@@ -19,12 +19,16 @@ final class KartViewModel: ObservableObject {
     /**
      Adds a product to the cart or increments its quantity if already present.
      - Parameter product: The product to add or update.
+     - Parameter color: optional
+     - Parameter size: optional
      */
-    func addToCart(product: Product) {
-        if let index = items.firstIndex(where: { $0.product.id == product.id }) {
+    func addToCart(product: Product, color: String? = nil, size: String? = nil) {
+        if let index = items.firstIndex(where: {
+            $0.product.id == product.id && $0.selectedColor == color && $0.selectedSize == size
+        }) {
             items[index].quantity += 1
         } else {
-            items.append(KartItem(product: product, quantity: 1))
+            items.append(KartItem(product: product, quantity: 1, selectedColor: color, selectedSize: size))
         }
     }
     

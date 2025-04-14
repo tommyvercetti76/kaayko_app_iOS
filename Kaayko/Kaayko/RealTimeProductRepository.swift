@@ -73,22 +73,26 @@ final class RealtimeProductRepository: ObservableObject, ProductRepositoryProtoc
                     return
                 }
                 
-                // We’ll build a new array of products from the snapshot
+                // We'll build a new array of products from the snapshot
                 var updatedProducts: [Product] = []
                 
-                // For each doc, convert to Product
                 for doc in documents {
                     let data = doc.data()
-                    guard let productID = data["productID"] as? String else {
-                        continue
-                    }
+                    
+                    // Basic fields
+                    let productID = data["productID"] as? String ?? ""
                     let title = data["title"] as? String ?? ""
                     let desc = data["description"] as? String ?? ""
                     let price = data["price"] as? String ?? ""
                     let votes = data["votes"] as? Int ?? 0
                     let tags = data["tags"] as? [String] ?? []
                     
-                    // We'll create a placeholder Product with an empty imgSrc for now.
+                    // **New** fields
+                    let availableColors = data["availableColors"] as? [String] ?? []
+                    let availableSizes  = data["availableSizes"] as? [String] ?? []
+                    let maxQuantity     = data["maxQuantity"] as? Int ?? 3
+                    
+                    // Construct a Product with empty imgSrc for now
                     let product = Product(
                         id: doc.documentID,
                         title: title,
@@ -97,7 +101,10 @@ final class RealtimeProductRepository: ObservableObject, ProductRepositoryProtoc
                         votes: votes,
                         productID: productID,
                         imgSrc: [],
-                        tags: tags
+                        tags: tags,
+                        availableColors: availableColors,
+                        availableSizes: availableSizes,
+                        maxQuantity: maxQuantity
                     )
                     updatedProducts.append(product)
                 }
@@ -124,7 +131,6 @@ final class RealtimeProductRepository: ObservableObject, ProductRepositoryProtoc
      - Parameter freshProducts: The array of products from the Firestore snapshot (minus images).
      */
     private func updateAllProductsWithImages(_ freshProducts: [Product]) {
-        // We'll do an async method for image fetching
         Task {
             var finalList: [Product] = []
             
@@ -132,9 +138,8 @@ final class RealtimeProductRepository: ObservableObject, ProductRepositoryProtoc
             for product in freshProducts {
                 let pid = product.productID
                 // Check if we have images cached
-                if let cached = imageCache[pid] {
-                    // We already have them
-                    let updated = product.withImages(cached)
+                if let cachedImages = imageCache[pid] {
+                    let updated = product.withImages(cachedImages)
                     finalList.append(updated)
                 } else {
                     // Need to fetch images from Firebase Storage
@@ -145,10 +150,7 @@ final class RealtimeProductRepository: ObservableObject, ProductRepositoryProtoc
                 }
             }
             
-            // Sort or keep order as you'd like. We'll just keep Firestore's snapshot order:
-            // finalList is in the same order we got docs.
-            
-            // Publish final to @Published
+            // We'll keep Firestore's order
             await MainActor.run {
                 self.allProducts = finalList
             }
@@ -218,7 +220,7 @@ final class RealtimeProductRepository: ObservableObject, ProductRepositoryProtoc
         ])
         
         // We assume the snapshot listener will also reflect this change,
-        // but let's update local immediately for snappier UI.
+        // but let's update local immediately for a snappier UI.
         await MainActor.run {
             if let idx = allProducts.firstIndex(where: { $0.id == productId }) {
                 allProducts[idx].votes += voteChange

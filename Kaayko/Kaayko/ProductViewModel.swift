@@ -2,134 +2,85 @@
 //  ProductViewModel.swift
 //  Kaayko
 //
-//  Created by Rohan Ramekar on 3/12/25.
+//  Created by Your Name on 2025‑04‑22.
 //
-//  A ViewModel that listens to the RealtimeProductRepository for changes
-//  and provides filtered products for SwiftUI views. It supports filtering by tags
-//  and updating vote counts in real time. All operations run on the main actor.
+/// High‑level state object used by SwiftUI views.
+/// Consumes *any* `ProductRepositoryProtocol`; default is the REST one.
 //
-
 import SwiftUI
 import Combine
 
 @MainActor
 final class ProductViewModel: ObservableObject {
-    
-    /// The real-time repository providing product data and updates.
+
+    // MARK: Dependencies -----------------------------------------------------
+
     private let repository: ProductRepositoryProtocol
-    
-    /// A cancellable to hold our subscription to the repository's product publisher.
     private var cancellables = Set<AnyCancellable>()
-    
-    /// Published array of filtered products to display.
-    @Published var products: [Product] = []
-    
-    /// Published array of tags for filtering.
-    @Published var tags: [String] = ["All"]
-    
-    /// The currently selected tag.
-    @Published var selectedTag: String = "All"
-    
-    /// Indicates loading state (e.g., while we fetch images the first time).
-    @Published var isLoading = false
-    
-    /// Stores any error messages (not strictly required, but helpful for debug).
-    @Published var errorMessage: String? = nil
-    
-    /**
-     Initialize with a default RealtimeProductRepository or any other `ProductRepositoryProtocol`.
-     - Parameter repository: A repository that exposes `allProductsPublisher`.
-     */
-    init(repository: ProductRepositoryProtocol = RealtimeProductRepository()) {
+
+    // MARK: View‑state -------------------------------------------------------
+
+    @Published var products:     [Product] = []
+    @Published var tags:         [String]  = ["All"]
+    @Published var selectedTag:  String    = "All"
+    @Published var isLoading                 = false
+    @Published var errorMessage: String?     = nil
+
+    // MARK: Initialisers -----------------------------------------------------
+
+    /// Designated initialiser (DI‑friendly).
+    init(repository: ProductRepositoryProtocol) {
         self.repository = repository
-        
-        // Observe the repository's product list in real time:
+
         repository.allProductsPublisher
-            .receive(on: RunLoop.main)
-            .sink { [weak self] newAllProducts in
-                guard let self = self else { return }
-                // Re-filter whenever new data arrives
-                self.applyTagFilter(to: newAllProducts)
+            .sink { [weak self] list in
+                self?.applyTagFilter(to: list)
             }
             .store(in: &cancellables)
     }
-    
-    /**
-     Called from ContentView (or anywhere else) to kick off our real-time listener.
-     This matches your existing `.onAppear { Task { await productViewModel.loadInitialData() } }`.
-     */
-    func loadInitialData() async {
-        start()
+
+    /// Convenience: default to REST implementation.
+    convenience init() {
+        self.init(repository: KaaykoProductRepositoryAPI())
     }
-    
-    /**
-     Begins listening for product changes, sets up initial tags, etc.
-     If you'd rather not do this automatically on init, you call `start()` manually here.
-     */
+
+    // MARK: Flow -------------------------------------------------------------
+
+    func loadInitialData() { start() }
+
     func start() {
         isLoading = true
         repository.startListening()
-        
-        // We might fetch tags after the listener starts, so do a small delay:
+
+        // give Combine a tiny moment to deliver the first list
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            self.updateTags()
+            self.tags      = self.repository.fetchAllTags()
+            self.isLoading = false
         }
     }
-    
-    /**
-     Stop real-time listening if needed (e.g. user logs out). Optional.
-     */
-    func stop() {
-        repository.stopListening()
+
+    func stop() { repository.stopListening() }
+
+    // MARK: Filtering --------------------------------------------------------
+
+    private func applyTagFilter(to list: [Product]) {
+        products = selectedTag == "All"
+                 ? list
+                 : list.filter { $0.tags.contains(selectedTag) }
     }
-    
-    /**
-     Updates the tags from the repository's current product list.
-     */
-    private func updateTags() {
-        let allTags = repository.fetchAllTags()
-        tags = allTags
-        isLoading = false
-    }
-    
-    /**
-     Applies the currently selected tag to the given full product list, storing
-     the filtered result in `products`.
-     - Parameter allProducts: The unfiltered list from the repository.
-     */
-    private func applyTagFilter(to allProducts: [Product]) {
-        if selectedTag == "All" {
-            products = allProducts
-        } else {
-            products = allProducts.filter { $0.tags.contains(selectedTag) }
-        }
-    }
-    
-    /**
-     Public method to filter products by a given tag. We store that tag,
-     then apply it to the current repository product list.
-     - Parameter tag: The tag to filter by.
-     */
+
     func filterProducts(by tag: String) {
         selectedTag = tag
-        // The repository’s real-time data is always accessible in `allProductsPublisher`.
-        // We can directly read the last snapshot of allProducts from the repository if we have it.
-        if let repo = repository as? RealtimeProductRepository {
-            applyTagFilter(to: repo.allProducts)
-        }
+        applyTagFilter(to: products)
     }
-    
-    /**
-     Updates the vote count for a product. Firestore updates in the background,
-     but our real-time listener + local update ensures the user sees immediate changes.
-     - Parameter product: The product to update.
-     - Parameter voteChange: +1 or -1.
-     */
+
+    // MARK: Voting -----------------------------------------------------------
+
     func updateVotes(for product: Product, voteChange: Int) async {
         do {
-            try await repository.updateProductVotes(productId: product.id, voteChange: voteChange)
+            try await repository.updateProductVotes(productId: product.id,
+                                                    voteChange: voteChange)
         } catch {
-            print("Error updating votes:", error)
             errorMessage = error.localizedDescription
         }
     }

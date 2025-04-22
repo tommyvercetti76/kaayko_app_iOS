@@ -2,133 +2,135 @@
 //  ProductListView.swift
 //  Kaayko
 //
-//  Created by Rohan Ramekar on 3/12/25.
+//  Displays the carousel of cards.
+//  – Full app ⇒ shows all cards and, if `deepLinkProductID` is present,
+//    scrolls so the card appears centred (header height taken into account).
+//  – App Clip ⇒ waits for the one card, then centres it on screen.
 //
-//  A vertical scrolling list of product cards with a sticky header that contains:
-//    • The brand header (with "KAAYKO", About, Testimonials, and Cart buttons + cart count badge)
-//    • A horizontally scrollable category header
-//  Also shows a progress indicator when loading.
-//  Uses native iOS sheets (.sheet) with partial detents for both About & Testimonials.
-
 import SwiftUI
 
+private let kSideInset:  CGFloat = 16          // 16 pt left & right
+private let kHeaderGap:  CGFloat = 108         // sticky header height
+private let kExtraNudge: CGFloat =  24         // optics tweak for *true* centre
+
 struct ProductListView: View {
-    // MARK: - Properties
-    
-    /// ViewModel providing product and tag data (assumed real-time or cached).
+
+    // MARK: – Dependencies
     @ObservedObject var viewModel: ProductViewModel
-    
-    /// The KartViewModel providing cart data (for badge + adding items).
     @ObservedObject var kartViewModel: KartViewModel
-    
-    /// State controlling presentation of the About sheet.
-    @State private var showAboutSheet = false
-    
-    /// State controlling presentation of the Testimonials sheet.
+
+    let deepLinkProductID: String?
+    let isSingleProductMode: Bool               // true in App Clip
+
+    // MARK: – Sheet / modal state
+    @State private var showAboutSheet        = false
     @State private var showTestimonialsSheet = false
-    
-    /// State controlling presentation of the Cart modal (using .sheet).
-    @State private var isKartModalPresented = false
-    
-    /// Local property to store the cart item count (optional usage).
-    @State private var cartItemCount: Int = 0
-    
-    // MARK: - Body
-    
+    @State private var isKartModalPresented  = false
+
+    // MARK: – Body
     var body: some View {
         ZStack {
-            GeometryReader { geometry in
+            if isSingleProductMode { singleProductBody } else { fullListBody }
+            if viewModel.isLoading { ProgressView(size: .regular) }
+        }
+        .overlay(header, alignment: .top)
+        .onAppear { viewModel.start() }
+        .sheet(isPresented: $isKartModalPresented)  { KartSheetView(kartViewModel: kartViewModel) }
+        .sheet(isPresented: $showAboutSheet)        { AboutSheetView() }
+        .sheet(isPresented: $showTestimonialsSheet) { TestimonialsSheetView(testimonials: Testimonial.fakeTestimonials) }
+    }
+
+    // ───────── HEADER ──────────────────────────────────────────────────────
+    private var header: some View {
+        AppHeaderView(
+            onAbout:        { showAboutSheet        = true },
+            onTestimonials: { showTestimonialsSheet = true },
+            onCart:         { isKartModalPresented  = true },
+            cartCount:      kartViewModel.totalItemCount,
+            tags:           viewModel.tags,
+            selectedTag:    viewModel.selectedTag,
+            onTagSelected:  { tag in Task { await viewModel.filterProducts(by: tag) } },
+            isSingleProductMode: isSingleProductMode
+        )
+    }
+
+    // ───────── FULL APP ────────────────────────────────────────────────────
+    @ViewBuilder
+    private var fullListBody: some View {
+        GeometryReader { geo in
+            ScrollViewReader { proxy in
                 ScrollView {
                     VStack(spacing: 16) {
-                        // Spacer for combined header heights: 48 + 60
-                        Color.clear.frame(height: 108)
-                        
-                        // List of product cards
+                        Color.clear.frame(height: kHeaderGap)        // spacer
                         ForEach(viewModel.products) { product in
                             ProductCardView(
-                                product: product,
-                                viewModel: viewModel,
+                                product:       product,
+                                viewModel:     viewModel,
                                 kartViewModel: kartViewModel,
-                                onCartUpdate: handleCartUpdate
+                                onCartUpdate:  {}
                             )
-                            .frame(width: geometry.size.width - 32)
+                            .id(product.productID)
+                            .frame(maxWidth: .infinity)              // NEW – keeps L/R equal
                         }
                     }
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, kSideInset)
                     .padding(.bottom, 24)
                 }
-                
-                // Sticky headers overlay
-                .overlay(
-                    AppHeaderView(
-                        onAbout: {
-                            withAnimation {
-                                showAboutSheet = true
-                            }
-                        },
-                        onTestimonials: {
-                            withAnimation {
-                                showTestimonialsSheet = true
-                            }
-                        },
-                        onCart: {
-                            withAnimation {
-                                isKartModalPresented = true
-                            }
-                        },
-                        cartCount: kartViewModel.totalItemCount,
-                        tags: viewModel.tags,
-                        selectedTag: viewModel.selectedTag,
-                        onTagSelected: { tag in
-                            Task {
-                                await viewModel.filterProducts(by: tag)
-                            }
-                        }
-                    ),
-                    alignment: .top
-                )
+                .onAppear  { Task { await scrollIfNeeded(using: proxy, in: geo) } }
+                .onChange(of: viewModel.products) { _ in
+                    Task { await scrollIfNeeded(using: proxy, in: geo) }
+                }
             }
-            
-            // Show a loading indicator if needed
-            if viewModel.isLoading {
-                ProgressView(size: .regular)
-            }
-        }
-        // Real-time or initial load call
-        .onAppear {
-            // If using real-time approach:
-            viewModel.start()
-            
-            // If you prefer your old approach:
-            // Task { await viewModel.loadInitialData() }
-        }
-        
-        // Cart -> sheet
-        .sheet(isPresented: $isKartModalPresented) {
-            KartSheetView(kartViewModel: kartViewModel)
-        }
-        
-        // About -> partial-detent sheet
-        .sheet(isPresented: $showAboutSheet) {
-            AboutSheetView()
-        }
-        
-        // Testimonials -> partial-detent sheet
-        .sheet(isPresented: $showTestimonialsSheet) {
-            TestimonialsSheetView(testimonials: Testimonial.fakeTestimonials)
         }
     }
-    
-    // MARK: - Cart Update Handler
-    
-    /**
-     Called whenever a ProductCardView finishes a "DONE" add-to-cart action.
-     */
-    private func handleCartUpdate() {
-        // Re-check cart item count
-        cartItemCount = kartViewModel.totalItemCount
-        
-        // Could also trigger UI changes, analytics, etc.
-        print("Cart updated! New total: \(cartItemCount)")
+
+    // ───────── APP CLIP (single card) ─────────────────────────────────────
+    @ViewBuilder
+    private var singleProductBody: some View {
+        GeometryReader { geo in
+            if let pid = deepLinkProductID,
+               let product = viewModel.products.first(where: { $0.productID == pid }) {
+                VStack { Spacer(minLength: 0)
+                    ProductCardView(
+                        product:       product,
+                        viewModel:     viewModel,
+                        kartViewModel: kartViewModel,
+                        onCartUpdate:  {}
+                    )
+                    .frame(maxWidth: .infinity)
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, kSideInset)
+            } else if viewModel.isLoading {
+                ProgressView(size: .small)
+            } else {
+                Text("Product with ID \(deepLinkProductID ?? "unknown") not found.")
+                    .font(.headline).padding()
+            }
+        }
+    }
+
+    // ───────── Scroll helper ──────────────────────────────────────────────
+    private func scrollIfNeeded(using proxy: ScrollViewProxy,
+                                in geo: GeometryProxy) async {
+        guard let target = deepLinkProductID, !target.isEmpty else { return }
+
+        // wait (max ~6 s) for the product to arrive
+        for _ in 0..<20 where !Task.isCancelled {
+            if viewModel.products.contains(where: { $0.productID == target }) {
+                // combine anchor with manual y‑offset so the card’s middle
+                // appears visually centred below the sticky header
+                withAnimation {
+                    proxy.scrollTo(target, anchor: .center)
+                }
+                // nudge to compensate header & shadow
+                proxy.scrollTo(target, anchor: .center)
+                proxy.scrollTo(target, anchor: UnitPoint(x: 0.5,
+                                                         y: 0.5 - (kHeaderGap + kExtraNudge) /
+                                                                 geo.size.height))
+                return
+            }
+            try? await Task.sleep(for: .milliseconds(300))
+        }
     }
 }

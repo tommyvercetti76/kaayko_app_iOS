@@ -116,6 +116,7 @@ struct ProductCardView: View {
                 .transition(.move(edge: .bottom))
             }
         }
+        .frame(maxWidth: .infinity, alignment: .center)   // NEW
         .padding()
         .background(Color.white)
         .cornerRadius(12)

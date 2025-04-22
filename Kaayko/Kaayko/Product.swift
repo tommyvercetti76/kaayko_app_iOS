@@ -2,63 +2,50 @@
 //  Product.swift
 //  Kaayko
 //
-//  Created by Rohan Ramekar on 3/12/25.
+//  Created by Your Name on 2025‑04‑22.
 //
-//  Represents a single product in the Kaayko Store.
-
-
+/// Immutable value type mirroring the JSON returned by:
+/// `https://us‑central1‑kaayko‑api‑dev.cloudfunctions.net/api/products`
 import Foundation
 
-/// A domain entity representing a Kaayko product.
-struct Product: Identifiable {
-    /// The unique Firestore document ID.
+struct Product: Identifiable, Codable, Equatable {
+    /// Firestore document ID (and `/products/:id` identifier)
     let id: String
-    /// The product title.
+    /// Marketing title (e.g. “Straight Outta Sabarmati”)
     let title: String
-    /// A short product description.
+    /// Short copy shown under the title
     let description: String
-    /// The product price (e.g., "$99").
+    /// Display‑only price string (“$$$” etc.)
     let price: String
-    /// The number of votes or likes.
+    /// Current vote count
     var votes: Int
-    /// The unique productID used for Storage references.
+    /// Folder name in Cloud Storage
     let productID: String
-    /// An array of image URLs from Firebase Storage.
+    /// **Already‑proxied** image URLs
     let imgSrc: [String]
-    /// An array of tags (categories) associated with the product.
+    /// Free‑form category tags
     let tags: [String]
-    
-    /// array of available colors
+    /// Available colour swatches
     let availableColors: [String]
-    
-    /// array of available sizes
+    /// Available sizes (S / M / L…)
     let availableSizes: [String]
-    
-    // array of maximum quantity
+    /// Max quantity one user can buy
     let maxQuantity: Int
 }
 
-/// A simple domain entity for product tags (if needed).
-struct Tag: Identifiable {
-    let id = UUID()
-    let name: String
-}
-
 extension Product {
-    /// Returns a copy of this product with the specified image array set as `imgSrc`.
+    /// Returns a copy with a replaced `imgSrc` array.
     func withImages(_ images: [String]) -> Product {
-        Product(
-            id: self.id,
-            title: self.title,
-            description: self.description,
-            price: self.price,
-            votes: self.votes,
-            productID: self.productID,
-            imgSrc: images,
-            tags: self.tags,
-            availableColors: self.availableColors,
-            availableSizes: self.availableSizes,
-            maxQuantity: self.maxQuantity
-        )
+        Product(id: id,
+                title: title,
+                description: description,
+                price: price,
+                votes: votes,
+                productID: productID,
+                imgSrc: images,
+                tags: tags,
+                availableColors: availableColors,
+                availableSizes: availableSizes,
+                maxQuantity: maxQuantity)
     }
 }

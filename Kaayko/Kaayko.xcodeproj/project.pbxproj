@@ -7,23 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1C5799812D824FAD00213FEF /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 1C5799802D824FAD00213FEF /* FirebaseFirestore */; };
-		1C5799832D82500700213FEF /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 1C5799822D82500700213FEF /* FirebaseAnalytics */; };
-		1C5799852D82500700213FEF /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 1C5799842D82500700213FEF /* FirebaseCore */; };
-		1C5799872D82500700213FEF /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 1C5799862D82500700213FEF /* FirebaseFirestore */; };
-		1C7C078C2D82506A00899230 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 1C7C078B2D82506A00899230 /* FirebaseStorage */; };
-		1C7C078E2D8250DE00899230 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 1C7C078D2D8250DE00899230 /* FirebaseAnalytics */; };
-		1C7C07902D8250DE00899230 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 1C7C078F2D8250DE00899230 /* FirebaseCore */; };
-		1C7C07922D8250DE00899230 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 1C7C07912D8250DE00899230 /* FirebaseFirestore */; };
-		1C7C079A2D82647E00899230 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 1C7C07992D82647E00899230 /* FirebaseAnalytics */; };
-		1C7C079C2D82647E00899230 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 1C7C079B2D82647E00899230 /* FirebaseCore */; };
-		1C7C079E2D82647E00899230 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 1C7C079D2D82647E00899230 /* FirebaseFirestore */; };
 		1CDB6DD12D82417B00696C3D /* Kaayko Clip.app in Embed App Clips */ = {isa = PBXBuildFile; fileRef = 1CDB6DAC2D82417900696C3D /* Kaayko Clip.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		1CDB6E162D824BCF00696C3D /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 1CDB6E152D824BCF00696C3D /* FirebaseAnalytics */; };
-		1CDB6E182D824BCF00696C3D /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 1CDB6E172D824BCF00696C3D /* FirebaseFirestore */; };
-		1CDB6E1A2D824BCF00696C3D /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 1CDB6E192D824BCF00696C3D /* FirebaseStorage */; };
-		1CDB6E512D824D4400696C3D /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 1CDB6E502D824D4400696C3D /* FirebaseCore */; };
-		1CDB6E532D824D5F00696C3D /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 1CDB6E522D824D5F00696C3D /* FirebaseCore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -88,6 +72,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		1CDA872C2DAE11F2004EEE98 /* Exceptions for "Kaayko Clip" folder in "Kaayko" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				ContentView.swift,
+			);
+			target = 1CDB6D7A2D82416A00696C3D /* Kaayko */;
+		};
 		1CDB6DD22D82417B00696C3D /* Exceptions for "Kaayko Clip" folder in "Kaayko Clip" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -98,11 +89,11 @@
 		1CDB6E052D82480A00696C3D /* Exceptions for "Kaayko" folder in "Kaayko Clip" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				KaaykoProductRepositoryAPI.swift,
 				KartItem.swift,
 				KartViewModel.swift,
 				Product.swift,
 				ProductViewModel.swift,
-				RealTimeProductRepository.swift,
 				Views/AboutSheetView.swift,
 				Views/AppHeaderView.swift,
 				Views/BuyPanelView.swift,
@@ -112,6 +103,7 @@
 				Views/ProductCardView.swift,
 				Views/ProductCategoryHeaderView.swift,
 				Views/ProductListView.swift,
+				Views/ProductRepositoryProtocol.swift,
 				Views/ProgressView.swift,
 				Views/Testimonial.swift,
 				Views/TestimonialSheetView.swift,
@@ -143,6 +135,7 @@
 		1CDB6DAD2D82417900696C3D /* Kaayko Clip */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				1CDA872C2DAE11F2004EEE98 /* Exceptions for "Kaayko Clip" folder in "Kaayko" target */,
 				1CDB6DD22D82417B00696C3D /* Exceptions for "Kaayko Clip" folder in "Kaayko Clip" target */,
 			);
 			path = "Kaayko Clip";
@@ -165,11 +158,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1CDB6E162D824BCF00696C3D /* FirebaseAnalytics in Frameworks */,
-				1C7C079C2D82647E00899230 /* FirebaseCore in Frameworks */,
-				1CDB6E182D824BCF00696C3D /* FirebaseFirestore in Frameworks */,
-				1CDB6E512D824D4400696C3D /* FirebaseCore in Frameworks */,
-				1CDB6E1A2D824BCF00696C3D /* FirebaseStorage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -191,17 +179,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1C7C078E2D8250DE00899230 /* FirebaseAnalytics in Frameworks */,
-				1CDB6E532D824D5F00696C3D /* FirebaseCore in Frameworks */,
-				1C5799812D824FAD00213FEF /* FirebaseFirestore in Frameworks */,
-				1C5799852D82500700213FEF /* FirebaseCore in Frameworks */,
-				1C5799872D82500700213FEF /* FirebaseFirestore in Frameworks */,
-				1C7C07922D8250DE00899230 /* FirebaseFirestore in Frameworks */,
-				1C5799832D82500700213FEF /* FirebaseAnalytics in Frameworks */,
-				1C7C07902D8250DE00899230 /* FirebaseCore in Frameworks */,
-				1C7C079A2D82647E00899230 /* FirebaseAnalytics in Frameworks */,
-				1C7C079E2D82647E00899230 /* FirebaseFirestore in Frameworks */,
-				1C7C078C2D82506A00899230 /* FirebaseStorage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

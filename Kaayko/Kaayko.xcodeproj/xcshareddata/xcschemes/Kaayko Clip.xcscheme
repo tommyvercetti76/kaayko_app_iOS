@@ -77,7 +77,7 @@
       <EnvironmentVariables>
          <EnvironmentVariable
             key = "_XCAppClipURL"
-            value = "https://kaayko.com?productID=sabarmati"
+            value = "https://kaayko.com?productID=abe"
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>

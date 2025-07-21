@@ -7,6 +7,22 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1C33AAA02E2D19FB000A7C34 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 1CDB6E522D824D5F00696C3D /* FirebaseCore */; };
+		1C33AAA12E2D19FB000A7C34 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 1C5799802D824FAD00213FEF /* FirebaseFirestore */; };
+		1C33AAA22E2D19FB000A7C34 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 1C5799822D82500700213FEF /* FirebaseAnalytics */; };
+		1C33AAA32E2D19FB000A7C34 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 1C5799842D82500700213FEF /* FirebaseCore */; };
+		1C33AAA42E2D19FB000A7C34 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 1C5799862D82500700213FEF /* FirebaseFirestore */; };
+		1C33AAA52E2D19FB000A7C34 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 1C7C078B2D82506A00899230 /* FirebaseStorage */; };
+		1C33AAA62E2D19FB000A7C34 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 1C7C078D2D8250DE00899230 /* FirebaseAnalytics */; };
+		1C33AAA72E2D19FB000A7C34 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 1C7C078F2D8250DE00899230 /* FirebaseCore */; };
+		1C33AAA82E2D19FB000A7C34 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 1C7C07912D8250DE00899230 /* FirebaseFirestore */; };
+		1C33AAA92E2D19FB000A7C34 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 1C7C07992D82647E00899230 /* FirebaseAnalytics */; };
+		1C33AAAA2E2D19FB000A7C34 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 1C7C079D2D82647E00899230 /* FirebaseFirestore */; };
+		1C33AAAB2E2D19FB000A7C34 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 1CDB6E152D824BCF00696C3D /* FirebaseAnalytics */; };
+		1C33AAAC2E2D19FB000A7C34 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 1CDB6E172D824BCF00696C3D /* FirebaseFirestore */; };
+		1C33AAAD2E2D19FB000A7C34 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 1CDB6E192D824BCF00696C3D /* FirebaseStorage */; };
+		1C33AAAE2E2D19FB000A7C34 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 1CDB6E502D824D4400696C3D /* FirebaseCore */; };
+		1C33AAAF2E2D19FB000A7C34 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 1C7C079B2D82647E00899230 /* FirebaseCore */; };
 		1CDB6DD12D82417B00696C3D /* Kaayko Clip.app in Embed App Clips */ = {isa = PBXBuildFile; fileRef = 1CDB6DAC2D82417900696C3D /* Kaayko Clip.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -89,6 +105,7 @@
 		1CDB6E052D82480A00696C3D /* Exceptions for "Kaayko" folder in "Kaayko Clip" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				KaaykoPaddlingSpotRepositoryAPI.swift,
 				KaaykoProductRepositoryAPI.swift,
 				KartItem.swift,
 				KartViewModel.swift,
@@ -98,16 +115,29 @@
 				Views/AppHeaderView.swift,
 				Views/BuyPanelView.swift,
 				Views/DiamondShape.swift,
+				Views/FooterButtonsView.swift,
+				Views/FullScreenView.swift,
 				Views/KartSheetView.swift,
 				Views/KartView.swift,
+				Views/POCard.swift,
+				Views/POCardScreenView.swift,
+				Views/POCardView.swift,
+				Views/POIndicatorOrbView.swift,
+				Views/POViewModel.swift,
+				Views/POWeatherFetcher.swift,
+				Views/POWeatherIconManager.swift,
+				Views/POWeatherModels.swift,
+				Views/POWeatherView.swift,
+				Views/POWeatherViewModel.swift,
 				Views/ProductCardView.swift,
 				Views/ProductCategoryHeaderView.swift,
 				Views/ProductListView.swift,
 				Views/ProductRepositoryProtocol.swift,
-				Views/ProgressView.swift,
+				Views/SplashScreenView.swift,
 				Views/Testimonial.swift,
 				Views/TestimonialSheetView.swift,
 				Views/TestimonialView.swift,
+				Views/Utils.swift,
 			);
 			target = 1CDB6DAB2D82417900696C3D /* Kaayko Clip */;
 		};
@@ -158,6 +188,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1C33AAAF2E2D19FB000A7C34 /* FirebaseCore in Frameworks */,
+				1C33AAAE2E2D19FB000A7C34 /* FirebaseCore in Frameworks */,
+				1C33AAAD2E2D19FB000A7C34 /* FirebaseStorage in Frameworks */,
+				1C33AAAC2E2D19FB000A7C34 /* FirebaseFirestore in Frameworks */,
+				1C33AAAB2E2D19FB000A7C34 /* FirebaseAnalytics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -179,6 +214,17 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1C33AAAA2E2D19FB000A7C34 /* FirebaseFirestore in Frameworks */,
+				1C33AAA92E2D19FB000A7C34 /* FirebaseAnalytics in Frameworks */,
+				1C33AAA82E2D19FB000A7C34 /* FirebaseFirestore in Frameworks */,
+				1C33AAA72E2D19FB000A7C34 /* FirebaseCore in Frameworks */,
+				1C33AAA62E2D19FB000A7C34 /* FirebaseAnalytics in Frameworks */,
+				1C33AAA52E2D19FB000A7C34 /* FirebaseStorage in Frameworks */,
+				1C33AAA42E2D19FB000A7C34 /* FirebaseFirestore in Frameworks */,
+				1C33AAA32E2D19FB000A7C34 /* FirebaseCore in Frameworks */,
+				1C33AAA22E2D19FB000A7C34 /* FirebaseAnalytics in Frameworks */,
+				1C33AAA12E2D19FB000A7C34 /* FirebaseFirestore in Frameworks */,
+				1C33AAA02E2D19FB000A7C34 /* FirebaseCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

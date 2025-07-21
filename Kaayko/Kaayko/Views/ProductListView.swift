@@ -31,7 +31,7 @@ struct ProductListView: View {
     var body: some View {
         ZStack {
             if isSingleProductMode { singleProductBody } else { fullListBody }
-            if viewModel.isLoading { ProgressView(size: .regular) }
+            if viewModel.isLoading { ProgressView() }
         }
         .overlay(header, alignment: .top)
         .onAppear { viewModel.start() }
@@ -102,7 +102,7 @@ struct ProductListView: View {
                 }
                 .padding(.horizontal, kSideInset)
             } else if viewModel.isLoading {
-                ProgressView(size: .small)
+                ProgressView()
             } else {
                 Text("Product with ID \(deepLinkProductID ?? "unknown") not found.")
                     .font(.headline).padding()

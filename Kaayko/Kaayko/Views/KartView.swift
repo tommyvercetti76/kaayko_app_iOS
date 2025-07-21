@@ -4,7 +4,7 @@
 //
 //  Created by Rohan Ramekar on 3/16/25.
 //
-//  A SwiftUI view that displays the user's cart as a full-screen overlay,
+//  A SwiftUI view that displays as a full-screen overlay,
 //  with a matched-geometry effect from a reference frame (like the cart button).
 //  The kart items are displayed in a list, each with quantity controls.
 
@@ -27,18 +27,15 @@ struct KartView: View {
     var body: some View {
         ZStack(alignment: .topTrailing) {
             // Full-screen background to capture taps.
-            // You could also use a background color with partial opacity.
             Color.black.opacity(0.4)
                 .ignoresSafeArea()
                 .onTapGesture {
-                    // If you want tapping outside to close the cart:
                     withAnimation(.spring()) {
                         isPresented = false
                     }
                 }
             
             // The main cart container.
-            // Matches geometry with the cart button via "cartButton" ID.
             VStack(spacing: 0) {
                 // Placeholder top bar for the cart (like a nav bar).
                 HStack {
@@ -110,23 +107,31 @@ struct KartView: View {
     @ViewBuilder
     private func cartItemRow(item: KartItem) -> some View {
         HStack(spacing: 12) {
-            // A simple image or placeholder for the product.
-            if let firstImage = item.product.imgSrc.first, let url = URL(string: firstImage) {
+            // A simple image or placeholder for the product using Apple AsyncImage
+            if let firstImage = item.product.imgSrc.first,
+               let url = URL(string: firstImage) {
                 AsyncImage(url: url) { phase in
                     switch phase {
-                    case .empty: ProgressView(size: .small).frame(width: 60, height: 60)
+                    case .empty:
+                        ProgressView()
+                            .frame(width: 60, height: 60)
                     case .success(let image):
                         image
                             .resizable()
                             .scaledToFill()
-                            .frame(width: 60, height: 60)
-                            .cornerRadius(8)
-                    case .failure: Color.gray.frame(width: 60, height: 60).cornerRadius(8)
-                    @unknown default: EmptyView()
+                    case .failure:
+                        Color.gray
+                    @unknown default:
+                        EmptyView()
                     }
                 }
+                .frame(width: 60, height: 60)
+                .cornerRadius(8)
+                .clipped()
             } else {
-                Color.gray.frame(width: 60, height: 60).cornerRadius(8)
+                Color.gray
+                    .frame(width: 60, height: 60)
+                    .cornerRadius(8)
             }
             
             // Title and Price
@@ -141,17 +146,17 @@ struct KartView: View {
             
             // Quantity controls
             HStack {
-                Button(action: {
+                Button {
                     kartViewModel.updateQuantity(for: item, delta: -1)
-                }) {
+                } label: {
                     Image(systemName: "minus.circle")
                 }
                 Text("\(item.quantity)")
                     .font(.system(size: 16, weight: .medium))
                     .frame(minWidth: 20)
-                Button(action: {
+                Button {
                     kartViewModel.updateQuantity(for: item, delta: +1)
-                }) {
+                } label: {
                     Image(systemName: "plus.circle")
                 }
             }

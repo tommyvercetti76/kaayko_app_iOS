@@ -1,14 +1,8 @@
-//
 //  KaaykoProductRepositoryAPI.swift
 //  Kaayko
 //
-//  Created by Your Name on 2025‑04‑22.
+//  Created by Rohan Ramekar on 2025-04-22.
 //
-/// REST‑backed repository:
-///   • One‑shot GET  /products
-///   • Rewrites every signed Storage URL -> /api/images/…
-///   • POST   /products/:id/vote
-///
 import Foundation
 import Combine
 
@@ -22,8 +16,8 @@ final class KaaykoProductRepositoryAPI: ObservableObject, ProductRepositoryProto
 
     // MARK: End‑points & state ----------------------------------------------
 
-    private let baseURL        = URL(string: "https://us-central1-kaayko-api-dev.cloudfunctions.net/api")!
-    private let imageProxyBase = URL(string: "https://us-central1-kaayko-api-dev.cloudfunctions.net/api/images")!
+    private let baseURL        = URL(string: "https://kaayko.com/api")!
+    private let imageProxyBase = URL(string: "https://kaayko.com/api/images")!
     private var cancellables   = Set<AnyCancellable>()
 
     // MARK: Lifecycle --------------------------------------------------------
@@ -34,43 +28,46 @@ final class KaaykoProductRepositoryAPI: ObservableObject, ProductRepositoryProto
     // MARK: Tag helper -------------------------------------------------------
 
     func fetchAllTags() -> [String] {
-        let unique = Set(allProducts.flatMap(\.tags))
+        let unique = Set(allProducts.flatMap(\ .tags))
         return ["All"] + unique.sorted()
     }
 
     // MARK: Network ----------------------------------------------------------
 
-    /// Downloads, decodes and proxies every image URL.
+    /// Downloads and decodes all products - using direct Firebase image URLs
     private func fetchAllProducts() {
-        let proxyBase = imageProxyBase                      // capture by value
-        let url       = baseURL.appendingPathComponent("products")
+        let url = baseURL.appendingPathComponent("products")
+
+        print("🛒 Fetching all products from: \(url.absoluteString)")
 
         URLSession.shared.dataTaskPublisher(for: url)
             .map(\.data)
             .decode(type: [Product].self, decoder: JSONDecoder())
 
-            // Replace each signed URL with `/api/images/<pid>/<file>`
+            // Use Firebase URLs directly - no proxying needed
             .map { products in
-                products.map { product in
-                    let proxied = product.imgSrc.compactMap { signed -> String? in
-                        guard
-                            let signedURL   = URL(string: signed),
-                            let decodedPath = signedURL.path.removingPercentEncoding
-                        else { return nil }
-
-                        let fileName = decodedPath.components(separatedBy: "/").last ?? ""
-                        return proxyBase
-                            .appendingPathComponent(product.productID)
-                            .appendingPathComponent(fileName)
-                            .absoluteString
-                    }
-                    return product.withImages(proxied)
-                }
+                print("📦 Received \(products.count) products")
+                print("🖼️  Sample images from first product: \(products.first?.imgSrc.prefix(2) ?? [])")
+                return products
             }
 
-            .catch { _ in Just([]) }                       // always delivers a value
+            // On error, provide empty array
+            .replaceError(with: [])
+
             .receive(on: DispatchQueue.main)
-            .assign(to: \.allProducts, on: self)
+            .sink(
+                receiveCompletion: { completion in
+                    switch completion {
+                    case .failure(let error):
+                        print("🚨 Failed to fetch products: \(error)")
+                    case .finished:
+                        print("✅ Successfully fetched products")
+                    }
+                },
+                receiveValue: { [weak self] products in
+                    self?.allProducts = products
+                }
+            )
             .store(in: &cancellables)
     }
 
@@ -86,6 +83,8 @@ final class KaaykoProductRepositoryAPI: ObservableObject, ProductRepositoryProto
             .appendingPathComponent(productId)
             .appendingPathComponent("vote")
 
+        print("🗳️ Voting on product '\(productId)' with change \(voteChange) at: \(voteURL.absoluteString)")
+
         var req = URLRequest(url: voteURL)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -94,10 +93,13 @@ final class KaaykoProductRepositoryAPI: ObservableObject, ProductRepositoryProto
         let (data, resp) = try await URLSession.shared.data(for: req)
         guard let http = resp as? HTTPURLResponse, http.statusCode == 200 else {
             let msg = String(data: data, encoding: .utf8) ?? "Unknown error"
+            print("🚨 Vote failed for product '\(productId)': \(msg)")
             throw NSError(domain: "Vote failed",
                           code: (resp as? HTTPURLResponse)?.statusCode ?? 0,
                           userInfo: [NSLocalizedDescriptionKey: msg])
         }
+
+        print("✅ Successfully voted on product '\(productId)'")
 
         // mutate local cache so UI reflects instantly
         if let idx = allProducts.firstIndex(where: { $0.id == productId }) {

@@ -116,12 +116,11 @@ struct ProductCardView: View {
                 .transition(.move(edge: .bottom))
             }
         }
-        .frame(maxWidth: .infinity, alignment: .center)   // NEW
+        .frame(maxWidth: .infinity, alignment: .center)
         .padding()
         .background(Color.white)
         .cornerRadius(12)
         .shadow(color: Color.black.opacity(0.1), radius: 6, x: 0, y: 2)
-        // Overall open/close for the entire panel
         .animation(.easeInOut(duration: 0.25), value: showBuyPanel)
         .onAppear {
             autoSelectIfSingleOption()
@@ -130,32 +129,71 @@ struct ProductCardView: View {
 }
 
 // MARK: - Subviews
+
 extension ProductCardView {
     
     private var imageCarousel: some View {
         TabView(selection: $currentIndex) {
             ForEach(product.imgSrc.indices, id: \.self) { idx in
                 if let url = URL(string: product.imgSrc[idx]) {
+                    // Use Apple's AsyncImage with better error handling
                     AsyncImage(url: url) { phase in
                         switch phase {
                         case .empty:
-                            ProgressView(size: .small)
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.3))
                                 .frame(height: 240)
+                                .overlay(
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .gray))
+                                )
                         case .success(let image):
                             image
                                 .resizable()
                                 .scaledToFill()
                                 .frame(height: 240)
                                 .clipped()
-                        case .failure:
-                            Color.gray.frame(height: 240)
+                        case .failure(let error):
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.5))
+                                .frame(height: 240)
+                                .overlay(
+                                    VStack {
+                                        Image(systemName: "photo")
+                                            .foregroundColor(.gray)
+                                            .font(.title)
+                                        Text("Image not available")
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                    }
+                                )
+                                .onAppear {
+                                    print("🚨 Failed to load product image: \(url.absoluteString)")
+                                    print("🚨 Error: \(error)")
+                                }
                         @unknown default:
                             EmptyView()
                         }
                     }
                     .tag(idx)
                 } else {
-                    Color.gray.frame(height: 240).tag(idx)
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.5))
+                        .frame(height: 240)
+                        .overlay(
+                            VStack {
+                                Image(systemName: "photo")
+                                    .foregroundColor(.gray)
+                                    .font(.title)
+                                Text("Invalid URL")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            }
+                        )
+                        .tag(idx)
+                        .onAppear {
+                            print("🚨 Invalid product image URL: \(product.imgSrc[idx])")
+                        }
                 }
             }
         }
@@ -167,7 +205,9 @@ extension ProductCardView {
         HStack(spacing: 6) {
             ForEach(product.imgSrc.indices, id: \.self) { idx in
                 Circle()
-                    .fill(idx == currentIndex ? Color.black : Color.gray.opacity(0.4))
+                    .fill(idx == currentIndex
+                          ? Color.black
+                          : Color.gray.opacity(0.4))
                     .frame(width: 8, height: 8)
             }
         }
@@ -217,17 +257,14 @@ extension ProductCardView {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 28, height: 28)
-                        // The icon color is black if panel is closed, gold if open
                         .foregroundColor(showBuyPanel ? .yellow : .black)
-                        // If you'd like an extra glow around gold:
                         .shadow(
                             color: showBuyPanel ? Color.yellow.opacity(0.8) : .clear,
                             radius: showBuyPanel ? 12 : 0
                         )
-                        // Animate color & glow changes
                         .animation(.easeInOut(duration: 0.3), value: showBuyPanel)
                 }
-                .frame(width: 44, height: 44) // a tap target
+                .frame(width: 44, height: 44)
                 .accessibilityLabel(showBuyPanel ? "Close the Buy Panel" : "Buy this product")
             }
             .frame(maxWidth: .infinity)
@@ -238,16 +275,15 @@ extension ProductCardView {
 }
 
 // MARK: - Private Helpers
+
 extension ProductCardView {
     
     private func onBuyButtonTapped() {
         if !showBuyPanel {
-            // Open
             withAnimation {
                 showBuyPanel = true
             }
         } else {
-            // Already open -> request reverse subview animations
             buyPanelShouldClose = true
         }
     }

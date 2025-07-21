@@ -1,24 +1,29 @@
-//  KaaykoApp.swift
-//  Kaayko
-//
-//  Created by Your Name on 04/22/25.
-//
-/// The main SwiftUI entrypoint for the full Kaayko app.
-///  • Uses the same URL‐handling as the App Clip
-///  • No Firebase SDK is ever initialized—everything is via REST.
 import SwiftUI
+import FirebaseCore
 
 @main
 struct KaaykoApp: App {
     @State private var deepLinkProductID: String? = nil
-    
+    @State private var showAboutSheet        = false
+    @State private var showTestimonialsSheet = false
+
+    init() {
+        FirebaseApp.configure()
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView(
-              isAppClip: false,
+              isAppClip:         false,
               deepLinkProductID: deepLinkProductID
             )
-            .onOpenURL { url in handleIncomingURL(url) }
+            .sheet(isPresented: $showAboutSheet) {
+                AboutSheetView()
+            }
+            .sheet(isPresented: $showTestimonialsSheet) {
+                TestimonialsSheetView(testimonials: Testimonial.fakeTestimonials)
+            }
+            .onOpenURL(perform: handleIncomingURL)
             .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { ua in
                 if let url = ua.webpageURL {
                     handleIncomingURL(url)
@@ -26,19 +31,41 @@ struct KaaykoApp: App {
             }
         }
     }
-    
+
     private func handleIncomingURL(_ url: URL) {
-        guard
-          let comps = URLComponents(url: url, resolvingAgainstBaseURL: false),
-          let item  = comps.queryItems?.first(where: { $0.name == "productID" }),
-          let val   = item.value,
-          !val.isEmpty
-        else {
-            DispatchQueue.main.async { self.deepLinkProductID = nil }
-            return
-        }
-        DispatchQueue.main.async {
-            self.deepLinkProductID = val
+        let path = url.path.lowercased()
+
+        switch path {
+          // About sheet on /ul/about or /ul/about.html
+          case "/ul/about", "/ul/about.html":
+            showAboutSheet = true
+            deepLinkProductID = nil
+
+          // Testimonials sheet on /ul/testimonials or /ul/testimonials.html
+          case "/ul/testimonials", "/ul/testimonials.html":
+            showTestimonialsSheet = true
+            deepLinkProductID = nil
+
+          default:
+            // Root listing (with optional ?productID) on /ul or /ul/index.html
+            if path == "/ul" || path == "/ul/index.html" {
+              showAboutSheet = false
+              showTestimonialsSheet = false
+
+              // extract ?productID=…
+              if let comps = URLComponents(url: url, resolvingAgainstBaseURL: false),
+                 let pidItem = comps.queryItems?.first(where: { $0.name == "productID" }),
+                 let val = pidItem.value, !val.isEmpty {
+                deepLinkProductID = val
+              } else {
+                deepLinkProductID = nil
+              }
+            } else {
+              // everything else: clear
+              deepLinkProductID    = nil
+              showAboutSheet        = false
+              showTestimonialsSheet = false
+            }
         }
     }
 }
